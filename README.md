@@ -60,13 +60,26 @@ Open `http://localhost:5173`
 
 📖 **[Full Development Guide](./CONTRIBUTING.md)**
 
+## API Usage
+
+After deployment, you can call the API directly:
+
+```bash
+curl -X POST https://your-project.pages.dev/api/generate \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-gitee-api-key" \
+  -d '{"prompt": "a cute cat", "width": 1024, "height": 1024}'
+```
+
+📖 **[Full API Reference](./docs/API.md)** - Providers, parameters, code examples
+
 ## Documentation
 
 | Doc | Description |
 |-----|-------------|
 | [Contributing](./CONTRIBUTING.md) | Local setup, LAN access, development |
 | [Deployment](./docs/DEPLOYMENT.md) | Cloudflare, Vercel, Netlify guides |
-| [API Reference](./docs/API.md) | Endpoints, parameters, security |
+| [API Reference](./docs/API.md) | Endpoints, parameters, code examples |
 
 ## Tech Stack
 
