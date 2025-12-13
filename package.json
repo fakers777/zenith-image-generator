@@ -17,7 +17,7 @@
     "build:web": "turbo run build --filter=@z-image/web",
     "build:api": "turbo run build --filter=@z-image/api",
     "build:shared": "turbo run build --filter=@z-image/shared",
-    "deploy:cf-pages": "pnpm build:web && cd apps/web && wrangler pages deploy dist --project-name=z-image",
+    "deploy:cf-pages": "pnpm build:web && cd apps/web && wrangler pages deploy dist --project-name=zenith-image-generator",
     "deploy:cf-workers": "cd apps/api && wrangler deploy",
     "deploy:vercel": "vercel --prod",
     "deploy:netlify": "netlify deploy --prod --dir=apps/web/dist",
