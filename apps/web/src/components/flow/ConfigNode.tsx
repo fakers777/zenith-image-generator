@@ -1,5 +1,5 @@
 import { Handle, type NodeProps, Position } from '@xyflow/react'
-import { Settings, ImageIcon } from 'lucide-react'
+import { ImageIcon, Settings } from 'lucide-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ConfigData } from '@/stores/flowStore'
@@ -19,9 +19,10 @@ function ConfigNodeComponent({ data, selected }: ConfigNodeProps) {
     <div
       className={`
         relative rounded-2xl p-4 w-[300px] transition-all duration-200
-        ${isPreview
-          ? 'bg-zinc-800/60 border-2 border-dashed border-orange-500/50'
-          : 'bg-zinc-800 border border-zinc-700'
+        ${
+          isPreview
+            ? 'bg-zinc-800/60 border-2 border-dashed border-orange-500/50'
+            : 'bg-zinc-800 border border-zinc-700'
         }
         ${selected && !isPreview ? 'ring-2 ring-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : ''}
         hover:border-orange-500/70

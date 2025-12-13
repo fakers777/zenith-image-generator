@@ -89,10 +89,7 @@ function getLayoutedElements(
 }
 
 // Helper to calculate path from root to a specific node
-function calculatePathToNode(
-  nodeId: string,
-  nodes: Node<MessageNodeData>[]
-): string[] {
+function calculatePathToNode(nodeId: string, nodes: Node<MessageNodeData>[]): string[] {
   const path: string[] = []
   let currentId: string | null = nodeId
 
@@ -200,8 +197,7 @@ export const useConversationFlowStore = create<ConversationFlowState>()(
           newActivePath.includes(edge.source) && newActivePath.includes(edge.target)
             ? 'active-edge'
             : 'inactive-edge',
-        animated:
-          newActivePath.includes(edge.source) && newActivePath.includes(edge.target),
+        animated: newActivePath.includes(edge.source) && newActivePath.includes(edge.target),
       }))
 
       set({
@@ -219,9 +215,7 @@ export const useConversationFlowStore = create<ConversationFlowState>()(
     updateNodeContent: (nodeId, content) => {
       set((state) => ({
         nodes: state.nodes.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...node.data, content } }
-            : node
+          node.id === nodeId ? { ...node, data: { ...node.data, content } } : node
         ),
       }))
     },
@@ -276,7 +270,7 @@ export const useConversationFlowStore = create<ConversationFlowState>()(
 
       // Update active node if it was deleted
       const newActiveNodeId = nodesToDelete.has(state.activeNodeId ?? '')
-        ? parentId ?? null
+        ? (parentId ?? null)
         : state.activeNodeId
 
       // Recalculate active path
@@ -324,8 +318,7 @@ export const useConversationFlowStore = create<ConversationFlowState>()(
           newActivePath.includes(edge.source) && newActivePath.includes(edge.target)
             ? 'active-edge'
             : 'inactive-edge',
-        animated:
-          newActivePath.includes(edge.source) && newActivePath.includes(edge.target),
+        animated: newActivePath.includes(edge.source) && newActivePath.includes(edge.target),
       }))
 
       set({
@@ -345,10 +338,7 @@ export const useConversationFlowStore = create<ConversationFlowState>()(
     // Apply layout to all nodes
     applyLayout: () => {
       const state = get()
-      const { nodes: layoutedNodes, edges } = getLayoutedElements(
-        state.nodes,
-        state.edges
-      )
+      const { nodes: layoutedNodes, edges } = getLayoutedElements(state.nodes, state.edges)
       set({ nodes: layoutedNodes, edges })
     },
 

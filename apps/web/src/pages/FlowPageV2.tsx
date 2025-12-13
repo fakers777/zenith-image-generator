@@ -3,23 +3,22 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
+  type Node,
   ReactFlow,
   ReactFlowProvider,
-  type Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { ArrowLeft, Download, Loader2, Settings, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Download, Loader2, Settings, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ApiConfigAccordion } from '@/components/feature/ApiConfigAccordion'
 import { ConfigNode } from '@/components/flow/ConfigNode'
-import { ImageNode } from '@/components/flow/ImageNode'
 import { FlowInput } from '@/components/flow/FlowInput'
+import { ImageNode } from '@/components/flow/ImageNode'
 import { Lightbox } from '@/components/flow/Lightbox'
 import { StorageLimitModal } from '@/components/flow/StorageLimitModal'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
-import { useFlowStore, LAYOUT } from '@/stores/flowStore'
 import {
   getDefaultModel,
   getModelsByProvider,
@@ -28,8 +27,9 @@ import {
   saveSettings,
 } from '@/lib/constants'
 import { encryptAndStoreToken, loadAllTokens } from '@/lib/crypto'
+import { blobToDataUrl, cleanupForNewBlob, getBlob, storeBlob } from '@/lib/imageBlobStore'
 import { downloadImagesAsZip } from '@/lib/utils'
-import { getBlob, blobToDataUrl, cleanupForNewBlob, storeBlob } from '@/lib/imageBlobStore'
+import { LAYOUT, useFlowStore } from '@/stores/flowStore'
 
 const nodeTypes = {
   configNode: ConfigNode,
@@ -205,13 +205,9 @@ function FlowCanvas() {
         }
       }
 
-      await downloadImagesAsZip(
-        images,
-        `zenith-images-${Date.now()}.zip`,
-        (current, total) => {
-          setDownloadProgress(t('flow.downloadProgress', { current, total }))
-        }
-      )
+      await downloadImagesAsZip(images, `zenith-images-${Date.now()}.zip`, (current, total) => {
+        setDownloadProgress(t('flow.downloadProgress', { current, total }))
+      })
     } catch (error) {
       console.error('Failed to download images:', error)
     } finally {

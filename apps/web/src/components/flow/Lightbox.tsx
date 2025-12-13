@@ -1,9 +1,9 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { blobToDataUrl, blobToObjectUrl, getBlob } from '@/lib/imageBlobStore'
 import { useFlowStore } from '@/stores/flowStore'
-import { getBlob, blobToObjectUrl, blobToDataUrl } from '@/lib/imageBlobStore'
 
 export function Lightbox() {
   const { t } = useTranslation()
@@ -218,7 +218,9 @@ export function Lightbox() {
 
             {/* Info */}
             <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <span>{currentImage.data.width}×{currentImage.data.height}</span>
+              <span>
+                {currentImage.data.width}×{currentImage.data.height}
+              </span>
               {currentImage.data.duration && (
                 <>
                   <span>•</span>

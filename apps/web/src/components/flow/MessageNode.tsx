@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Handle, type NodeProps, Position } from '@xyflow/react'
 import { motion } from 'framer-motion'
 import { Bot, Copy, GitBranch, MessageSquare, Trash2, User } from 'lucide-react'
 import { memo, useCallback } from 'react'
@@ -58,9 +58,7 @@ function MessageNodeComponent({ data, selected }: MessageNodeProps) {
         type="target"
         position={Position.Top}
         className={`!w-3 !h-3 !border-2 transition-colors duration-200 ${
-          isOnActivePath
-            ? '!bg-orange-500 !border-orange-400'
-            : '!bg-zinc-600 !border-zinc-500'
+          isOnActivePath ? '!bg-orange-500 !border-orange-400' : '!bg-zinc-600 !border-zinc-500'
         }`}
       />
 
@@ -75,9 +73,7 @@ function MessageNodeComponent({ data, selected }: MessageNodeProps) {
           >
             {isUser ? <User size={14} /> : <Bot size={14} />}
           </div>
-          <span className="text-xs font-medium text-zinc-400">
-            {isUser ? 'You' : 'AI'}
-          </span>
+          <span className="text-xs font-medium text-zinc-400">{isUser ? 'You' : 'AI'}</span>
           {hasBranches && (
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-700/50">
               <GitBranch size={10} className="text-zinc-500" />
@@ -91,9 +87,7 @@ function MessageNodeComponent({ data, selected }: MessageNodeProps) {
       {/* Content */}
       <div className="px-4 pb-3">
         {isUser ? (
-          <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
-            {content}
-          </p>
+          <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{content}</p>
         ) : (
           <div className="text-sm text-zinc-300 leading-relaxed prose prose-invert prose-sm max-w-none">
             <ReactMarkdown>{content}</ReactMarkdown>
@@ -143,9 +137,7 @@ function MessageNodeComponent({ data, selected }: MessageNodeProps) {
         type="source"
         position={Position.Bottom}
         className={`!w-3 !h-3 !border-2 transition-colors duration-200 ${
-          isOnActivePath
-            ? '!bg-orange-500 !border-orange-400'
-            : '!bg-zinc-600 !border-zinc-500'
+          isOnActivePath ? '!bg-orange-500 !border-orange-400' : '!bg-zinc-600 !border-zinc-500'
         }`}
       />
     </motion.div>

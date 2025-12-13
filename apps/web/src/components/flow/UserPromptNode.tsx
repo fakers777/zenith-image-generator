@@ -18,9 +18,10 @@ function UserPromptNode({ data, selected }: NodeProps) {
       className={`
         relative rounded-2xl px-4 py-3 w-[280px] shadow-lg
         transition-all duration-300 ease-out
-        ${selected
-          ? 'bg-zinc-800 ring-2 ring-orange-500/60 shadow-[0_0_30px_rgba(249,115,22,0.25)]'
-          : 'bg-zinc-800/90 hover:bg-zinc-800'
+        ${
+          selected
+            ? 'bg-zinc-800 ring-2 ring-orange-500/60 shadow-[0_0_30px_rgba(249,115,22,0.25)]'
+            : 'bg-zinc-800/90 hover:bg-zinc-800'
         }
       `}
       style={{

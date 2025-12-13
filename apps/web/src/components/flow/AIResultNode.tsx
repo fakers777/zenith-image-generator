@@ -181,9 +181,10 @@ function AIResultNode({ id, data, selected }: NodeProps) {
       className={`
         relative backdrop-blur-md border rounded-xl p-4 min-w-[280px] shadow-2xl
         transition-all duration-300 ease-out
-        ${selected
-          ? 'bg-zinc-900/80 border-orange-500/50 ring-2 ring-orange-500/40 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
-          : 'bg-zinc-900/60 border-zinc-700 hover:border-zinc-600'
+        ${
+          selected
+            ? 'bg-zinc-900/80 border-orange-500/50 ring-2 ring-orange-500/40 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
+            : 'bg-zinc-900/60 border-zinc-700 hover:border-zinc-600'
         }
       `}
     >

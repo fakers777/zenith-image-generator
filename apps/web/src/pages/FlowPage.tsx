@@ -43,11 +43,7 @@ const nodeTypes = {
 }
 
 // Helper function to calculate path from root to a node
-function calculatePathToNode(
-  nodeId: string,
-  _nodes: Node[],
-  edges: Edge[]
-): string[] {
+function calculatePathToNode(nodeId: string, _nodes: Node[], edges: Edge[]): string[] {
   const path: string[] = []
   const edgeMap = new Map<string, string>() // target -> source
 
@@ -94,8 +90,7 @@ function FlowCanvas() {
   // Update edges with active path styling
   const styledEdges = useMemo(() => {
     return edges.map((edge) => {
-      const isOnActivePath =
-        activePath.includes(edge.source) && activePath.includes(edge.target)
+      const isOnActivePath = activePath.includes(edge.source) && activePath.includes(edge.target)
       return {
         ...edge,
         style: {
@@ -108,12 +103,9 @@ function FlowCanvas() {
   }, [edges, activePath])
 
   // Handle node click for selection
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      setSelectedNodeId((prev) => (prev === node.id ? null : node.id))
-    },
-    []
-  )
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setSelectedNodeId((prev) => (prev === node.id ? null : node.id))
+  }, [])
 
   // Handle pane click to deselect
   const onPaneClick = useCallback(() => {

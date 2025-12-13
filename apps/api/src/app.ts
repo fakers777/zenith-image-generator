@@ -345,7 +345,10 @@ export function createApp(config: AppConfig = {}) {
     try {
       const response = await fetch(url)
       if (!response.ok) {
-        return sendError(c, Errors.generationFailed('Image Proxy', `Failed to fetch image: ${response.status}`))
+        return sendError(
+          c,
+          Errors.generationFailed('Image Proxy', `Failed to fetch image: ${response.status}`)
+        )
       }
 
       const contentType = response.headers.get('content-type') || 'image/png'

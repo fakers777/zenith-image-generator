@@ -35,9 +35,7 @@ export function StorageLimitModal({
           <div className="p-2 rounded-full bg-orange-500/20">
             <AlertTriangle className="w-5 h-5 text-orange-500" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-100">
-            {t('storage.limitReached')}
-          </h2>
+          <h2 className="text-lg font-semibold text-zinc-100">{t('storage.limitReached')}</h2>
           <button
             type="button"
             onClick={onCancel}
@@ -70,9 +68,7 @@ export function StorageLimitModal({
           </div>
 
           {/* Instructions */}
-          <p className="text-sm text-zinc-400">
-            {t('storage.downloadFirst')}
-          </p>
+          <p className="text-sm text-zinc-400">{t('storage.downloadFirst')}</p>
         </div>
 
         {/* Actions */}

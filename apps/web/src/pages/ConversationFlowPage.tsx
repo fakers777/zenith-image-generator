@@ -8,7 +8,7 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, MessageSquarePlus, Sparkles, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -34,15 +34,8 @@ const edgeStyles = {
 function ConversationFlowCanvas() {
   const { setCenter } = useReactFlow()
 
-  const {
-    nodes,
-    edges,
-    activeNodeId,
-    addMessage,
-    setActiveNode,
-    clearFlow,
-    setNodes,
-  } = useConversationFlowStore()
+  const { nodes, edges, activeNodeId, addMessage, setActiveNode, clearFlow, setNodes } =
+    useConversationFlowStore()
 
   const [inputValue, setInputValue] = useState('')
   const [isThinking, setIsThinking] = useState(false)
@@ -76,7 +69,7 @@ function ConversationFlowCanvas() {
 
     // Auto-pan to new node
     setTimeout(() => {
-      const userNode = useConversationFlowStore.getState().nodes.find(n => n.id === userNodeId)
+      const userNode = useConversationFlowStore.getState().nodes.find((n) => n.id === userNodeId)
       if (userNode) {
         setCenter(userNode.position.x + 160, userNode.position.y + 90, { zoom: 1, duration: 500 })
       }
@@ -89,7 +82,7 @@ function ConversationFlowCanvas() {
 
       // Auto-pan to AI response
       setTimeout(() => {
-        const aiNode = useConversationFlowStore.getState().nodes.find(n => n.id === aiNodeId)
+        const aiNode = useConversationFlowStore.getState().nodes.find((n) => n.id === aiNodeId)
         if (aiNode) {
           setCenter(aiNode.position.x + 160, aiNode.position.y + 90, { zoom: 1, duration: 500 })
         }
@@ -142,9 +135,7 @@ function ConversationFlowCanvas() {
           </Link>
           <div className="flex items-center gap-2">
             <Sparkles className="text-orange-500" size={20} />
-            <span className="text-lg font-semibold text-zinc-100">
-              Conversation Flow
-            </span>
+            <span className="text-lg font-semibold text-zinc-100">Conversation Flow</span>
           </div>
         </div>
 
@@ -175,7 +166,7 @@ function ConversationFlowCanvas() {
             const updatedNodes = [...state.nodes]
             for (const change of changes) {
               if (change.type === 'position' && change.position) {
-                const nodeIndex = updatedNodes.findIndex(n => n.id === change.id)
+                const nodeIndex = updatedNodes.findIndex((n) => n.id === change.id)
                 if (nodeIndex !== -1) {
                   updatedNodes[nodeIndex] = {
                     ...updatedNodes[nodeIndex],
@@ -197,12 +188,7 @@ function ConversationFlowCanvas() {
           proOptions={{ hideAttribution: true }}
           className="conversation-flow-canvas"
         >
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={20}
-            size={1}
-            color="#27272a"
-          />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#27272a" />
           <Controls
             className="!bg-zinc-800/90 !border-zinc-700 !rounded-lg [&>button]:!bg-zinc-800 [&>button]:!border-zinc-700 [&>button]:hover:!bg-zinc-700 [&>button>svg]:!fill-zinc-400"
             showInteractive={false}
@@ -231,9 +217,7 @@ function ConversationFlowCanvas() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zinc-800/50 flex items-center justify-center">
                   <MessageSquarePlus size={32} className="text-zinc-500" />
                 </div>
-                <h2 className="text-lg font-medium text-zinc-400 mb-1">
-                  Start a conversation
-                </h2>
+                <h2 className="text-lg font-medium text-zinc-400 mb-1">Start a conversation</h2>
                 <p className="text-sm text-zinc-500">
                   Type a message below to begin your multi-thread flow
                 </p>
@@ -264,7 +248,9 @@ function ConversationFlowCanvas() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={activeNodeId ? 'Continue the conversation...' : 'Start a new conversation...'}
+              placeholder={
+                activeNodeId ? 'Continue the conversation...' : 'Start a new conversation...'
+              }
               rows={1}
               className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 resize-none outline-none text-sm leading-relaxed max-h-32"
               style={{

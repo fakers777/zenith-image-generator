@@ -1,8 +1,8 @@
-import type { Node, Edge } from '@xyflow/react'
+import type { Edge, Node } from '@xyflow/react'
+import { type IDBPDatabase, openDB } from 'idb'
 import { create } from 'zustand'
-import { subscribeWithSelector, persist, createJSONStorage } from 'zustand/middleware'
-import { openDB, type IDBPDatabase } from 'idb'
-import { deleteBlobs, clearAllBlobs } from '@/lib/imageBlobStore'
+import { createJSONStorage, persist, subscribeWithSelector } from 'zustand/middleware'
+import { clearAllBlobs, deleteBlobs } from '@/lib/imageBlobStore'
 
 // Layout constants
 export const LAYOUT = {
@@ -307,7 +307,16 @@ export const useFlowStore = create<FlowState>()(
           set((state) => ({
             imageNodes: state.imageNodes.map((n) =>
               n.id === imageId
-                ? { ...n, data: { ...n.data, imageUrl: url, imageBlobId: blobId, duration, isLoading: false } }
+                ? {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      imageUrl: url,
+                      imageBlobId: blobId,
+                      duration,
+                      isLoading: false,
+                    },
+                  }
                 : n
             ),
           }))
@@ -316,9 +325,7 @@ export const useFlowStore = create<FlowState>()(
         updateImageError: (imageId, error) => {
           set((state) => ({
             imageNodes: state.imageNodes.map((n) =>
-              n.id === imageId
-                ? { ...n, data: { ...n.data, error, isLoading: false } }
-                : n
+              n.id === imageId ? { ...n, data: { ...n.data, error, isLoading: false } } : n
             ),
           }))
         },

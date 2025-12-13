@@ -8,7 +8,7 @@
  * 3. Enable LRU-style cleanup when exceeding storage limits
  */
 
-import { openDB, type IDBPDatabase } from 'idb'
+import { type IDBPDatabase, openDB } from 'idb'
 
 const DB_NAME = 'zenith-image-blobs'
 const DB_VERSION = 1
@@ -17,8 +17,8 @@ const META_STORE = 'meta'
 
 // Storage limits - optimized for 2K/4K images
 export const STORAGE_LIMITS = {
-  MAX_IMAGES: 500,              // Maximum image count
-  MAX_STORAGE_MB: 4096,         // Maximum storage: 4GB
+  MAX_IMAGES: 500, // Maximum image count
+  MAX_STORAGE_MB: 4096, // Maximum storage: 4GB
   WARNING_THRESHOLD_PERCENT: 80, // Warn at 80%
 }
 
@@ -144,7 +144,10 @@ export async function storeBlob(id: string, blob: Blob): Promise<string | null> 
  * Store a blob with auto-cleanup (for backward compatibility)
  * Returns the blob ID if successful, 'cleanup_needed' if user confirmation required
  */
-export async function storeBlobWithCleanup(id: string, blob: Blob): Promise<string | 'cleanup_needed' | null> {
+export async function storeBlobWithCleanup(
+  id: string,
+  blob: Blob
+): Promise<string | 'cleanup_needed' | null> {
   const limitCheck = await checkStorageLimit(blob.size)
 
   if (limitCheck?.needsCleanup) {
@@ -260,8 +263,9 @@ export async function getStorageInfo(): Promise<{
     totalSizeMB,
     maxImages: STORAGE_LIMITS.MAX_IMAGES,
     maxStorageMB: STORAGE_LIMITS.MAX_STORAGE_MB,
-    isNearLimit: countPercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT ||
-                 sizePercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT,
+    isNearLimit:
+      countPercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT ||
+      sizePercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT,
   }
 }
 

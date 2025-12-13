@@ -1,13 +1,25 @@
 import { Handle, type NodeProps, Position } from '@xyflow/react'
-import { Download, Loader2, AlertCircle, ZoomIn } from 'lucide-react'
+import type { ImageDetails } from '@z-image/shared'
+import { AlertCircle, Download, Loader2, ZoomIn } from 'lucide-react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  getDefaultModel,
+  getModelsByProvider,
+  loadSettings,
+  type ProviderType,
+} from '@/lib/constants'
+import { loadAllTokens } from '@/lib/crypto'
+import {
+  blobToDataUrl,
+  blobToObjectUrl,
+  checkStorageLimit,
+  getBlob,
+  storeBlob,
+  urlToBlob,
+} from '@/lib/imageBlobStore'
 import type { ImageData } from '@/stores/flowStore'
 import { useFlowStore } from '@/stores/flowStore'
-import { loadSettings, type ProviderType, getModelsByProvider, getDefaultModel } from '@/lib/constants'
-import { loadAllTokens } from '@/lib/crypto'
-import { storeBlob, getBlob, urlToBlob, blobToObjectUrl, blobToDataUrl, checkStorageLimit } from '@/lib/imageBlobStore'
-import type { ImageDetails } from '@z-image/shared'
 
 interface ImageNodeProps extends NodeProps {
   data: ImageData
@@ -207,7 +219,19 @@ function ImageNodeComponent({ id, data }: ImageNodeProps) {
         updateImageError(id, err instanceof Error ? err.message : 'Failed to generate')
       }
     })()
-  }, [id, prompt, width, height, seed, imageUrl, isLoading, hasHydrated, updateImageGenerated, updateImageError, setStorageLimitState])
+  }, [
+    id,
+    prompt,
+    width,
+    height,
+    seed,
+    imageUrl,
+    isLoading,
+    hasHydrated,
+    updateImageGenerated,
+    updateImageError,
+    setStorageLimitState,
+  ])
 
   const handleDownload = async () => {
     if (!imageBlobId && !imageUrl) return
@@ -267,11 +291,7 @@ function ImageNodeComponent({ id, data }: ImageNodeProps) {
         </div>
       ) : displayUrl ? (
         <>
-          <img
-            src={displayUrl}
-            alt="Generated"
-            className="w-full h-full object-cover"
-          />
+          <img src={displayUrl} alt="Generated" className="w-full h-full object-cover" />
 
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">

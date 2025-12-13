@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { ASPECT_RATIOS } from '@/lib/constants'
-import { useFlowStore, type ConfigData } from '@/stores/flowStore'
+import { type ConfigData, useFlowStore } from '@/stores/flowStore'
 
 const STORAGE_KEY = 'zenith-flow-input-config'
 
@@ -194,7 +194,9 @@ export function FlowInput({ providerLabel }: FlowInputProps) {
           <div className="absolute -top-10 left-4 flex items-center gap-2 px-3 py-1.5 rounded-t-xl bg-blue-500/10 border border-blue-500/30 border-b-0">
             <span className="text-xs text-blue-300">
               {t('flow.editingConfig', { configId: editingConfigId })}
-              {isEditingModified && <span className="text-orange-400 ml-2">• {t('flow.modified')}</span>}
+              {isEditingModified && (
+                <span className="text-orange-400 ml-2">• {t('flow.modified')}</span>
+              )}
             </span>
             <button
               type="button"
