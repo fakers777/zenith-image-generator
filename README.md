@@ -21,11 +21,39 @@ batch generation, and one-click deployment to Cloudflare Pages.
 ## Features
 
 - **Multiple AI Providers** - Gitee AI, HuggingFace Spaces, ModelScope
+- **Image-to-Video** - Generate videos from images (Gitee AI)
 - **Dark Mode UI** - Gradio-style with frosted glass effects
 - **Flexible Sizing** - Multiple aspect ratios (1:1, 16:9, 9:16, 4:3, etc.)
 - **4x Upscaling** - RealESRGAN integration
 - **Secure Storage** - API keys encrypted with AES-256-GCM
+- **Token Rotation** - Multiple API keys with automatic failover on rate limits
 - **Flow Mode** - Visual canvas for batch generation (experimental)
+  - Local image caching with IndexedDB blob storage
+  - Dual limits: 500 images or 4GB max storage
+  - LRU cleanup with user confirmation before deletion
+  - Download all images before cleanup
+
+## Token Rotation
+
+Support multiple API tokens per provider for automatic rotation when hitting rate limits (429 errors).
+
+### How to Use
+
+Enter multiple tokens in the API settings, separated by **English commas** (`,`):
+
+```
+token_1, token_2, token_3
+```
+
+> **Note**: You must use English comma (`,`), Chinese comma (`，`) will not work.
+
+### How It Works
+
+1. Uses the first available token to make API requests
+2. When a 429 (rate limit) error occurs, automatically switches to the next token
+3. Exhausted tokens are tracked and skipped for the rest of the day
+4. Token status resets daily at UTC 00:00
+5. UI shows real-time token statistics (total/active/exhausted)
 
 ## Quick Start
 
@@ -48,6 +76,9 @@ batch generation, and one-click deployment to Cloudflare Pages.
 git clone https://github.com/WuMingDao/zenith-image-generator.git
 cd zenith-image-generator
 pnpm install
+
+# Configure environment
+cp apps/web/.env.example apps/web/.env
 
 # Terminal 1
 pnpm dev:api
@@ -80,6 +111,42 @@ curl -X POST https://your-project.pages.dev/api/generate \
 | [Contributing](./docs/en/CONTRIBUTING.md) | Local setup, LAN access, development |
 | [Deployment](./docs/en/DEPLOYMENT.md)     | Cloudflare, Vercel, Netlify guides   |
 | [API Reference](./docs/en/API.md)         | Endpoints, parameters, code examples |
+| [Providers & Models](./docs/en/PROVIDERS.md) | All providers and model details   |
+
+## Security
+
+### How Your API Keys Are Protected
+
+```
+Browser ──HTTPS──→ Cloudflare Workers ──HTTPS──→ AI Provider (Gitee/HuggingFace)
+   ↑                      ↑
+AES-256-GCM          Proxy Layer
+encrypted            (your deployment)
+```
+
+- **Local Encryption**: API keys are encrypted with AES-256-GCM before storing in localStorage
+- **Transport Security**: All communications use HTTPS encryption
+- **Proxy Architecture**: Your keys are sent to your own Workers, not directly to AI providers
+
+### ⚠️ Third-Party Deployment Warning
+
+> **Important**: If you use someone else's deployed instance, the operator can potentially access your API keys.
+
+This is because:
+
+1. The deployment owner can add logging code to capture request headers
+2. You cannot verify what code is actually deployed (even if the repo is open source)
+3. Cloudflare provides tools like `wrangler tail` that can inspect live requests
+
+**Recommendations**:
+
+| Scenario | Risk Level | Recommendation |
+|----------|------------|----------------|
+| Self-hosted deployment | ✅ Safe | Full control over your keys |
+| Third-party instance | ⚠️ Risky | Use disposable/low-balance keys only |
+| Unknown source | ❌ Unsafe | Do not enter valuable API keys |
+
+**For maximum security, always deploy your own instance.**
 
 ## Tech Stack
 
@@ -88,6 +155,10 @@ curl -X POST https://your-project.pages.dev/api/generate \
 | Frontend | React 19, Vite, Tailwind CSS, shadcn/ui |
 | Backend  | Hono (TypeScript)                       |
 | Deploy   | Cloudflare Pages, Vercel, Netlify       |
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=WuMingDao/zenith-image-generator&type=date&legend=top-left)](https://www.star-history.com/#WuMingDao/zenith-image-generator&type=date&legend=top-left)
 
 ## License
 

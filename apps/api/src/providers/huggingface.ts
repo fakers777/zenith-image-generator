@@ -2,80 +2,10 @@
  * HuggingFace Provider Implementation
  */
 
-import { HF_SPACES } from '@z-image/shared'
+import { Errors, HF_SPACES } from '@z-image/shared'
+import { MAX_INT32 } from '../constants'
+import { callGradioApi } from '../utils'
 import type { ImageProvider, ProviderGenerateRequest, ProviderGenerateResult } from './types'
-
-/** Extract complete event data from SSE stream */
-function extractCompleteEventData(sseStream: string): unknown {
-  const lines = sseStream.split('\n')
-  let currentEvent = ''
-
-  for (const line of lines) {
-    if (line.startsWith('event:')) {
-      currentEvent = line.substring(6).trim()
-    } else if (line.startsWith('data:')) {
-      const jsonData = line.substring(5).trim()
-      if (currentEvent === 'complete') {
-        return JSON.parse(jsonData)
-      }
-      if (currentEvent === 'error') {
-        // Parse actual error message from data
-        try {
-          const errorData = JSON.parse(jsonData)
-          const errorMsg =
-            errorData?.error || errorData?.message || JSON.stringify(errorData) || 'Unknown error'
-          throw new Error(errorMsg)
-        } catch (e) {
-          if (e instanceof SyntaxError) {
-            throw new Error(jsonData || 'Unknown SSE error')
-          }
-          throw e
-        }
-      }
-    }
-  }
-  // No complete/error event found, show raw response for debugging
-  throw new Error(`Unexpected SSE response: ${sseStream.substring(0, 300)}`)
-}
-
-/** Call Gradio API */
-async function callGradioApi(baseUrl: string, endpoint: string, data: unknown[], hfToken?: string) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (hfToken) headers.Authorization = `Bearer ${hfToken}`
-
-  // Debug: log request (uncomment for debugging)
-  // console.log(`[HuggingFace] Calling ${baseUrl}/gradio_api/call/${endpoint}`)
-  // console.log('[HuggingFace] Data:', JSON.stringify(data).slice(0, 200))
-
-  const queue = await fetch(`${baseUrl}/gradio_api/call/${endpoint}`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ data }),
-  })
-
-  if (!queue.ok) {
-    const errText = await queue.text().catch(() => '')
-    // console.error(`[HuggingFace] Queue request failed: ${queue.status}`, errText)
-    throw new Error(`Queue request failed: ${queue.status} - ${errText.slice(0, 100)}`)
-  }
-
-  const queueData = (await queue.json()) as { event_id?: string }
-  if (!queueData.event_id) {
-    // console.error('[HuggingFace] No event_id in response:', queueData)
-    throw new Error('No event_id returned')
-  }
-
-  // console.log(`[HuggingFace] Got event_id: ${queueData.event_id}`)
-
-  const result = await fetch(`${baseUrl}/gradio_api/call/${endpoint}/${queueData.event_id}`, {
-    headers,
-  })
-  const text = await result.text()
-
-  // console.log(`[HuggingFace] SSE response length: ${text.length}`)
-
-  return extractCompleteEventData(text) as unknown[]
-}
 
 /** Parse seed from response based on model */
 function parseSeedFromResponse(modelId: string, result: unknown[], fallbackSeed: number): number {
@@ -117,7 +47,7 @@ export class HuggingFaceProvider implements ImageProvider {
   readonly name = 'HuggingFace'
 
   async generate(request: ProviderGenerateRequest): Promise<ProviderGenerateResult> {
-    const seed = request.seed ?? Math.floor(Math.random() * 2147483647)
+    const seed = request.seed ?? Math.floor(Math.random() * MAX_INT32)
     const modelId = request.model || 'z-image-turbo'
     const baseUrl = HF_SPACES[modelId as keyof typeof HF_SPACES] || HF_SPACES['z-image-turbo']
     const config = MODEL_CONFIGS[modelId] || MODEL_CONFIGS['z-image-turbo']
@@ -135,11 +65,9 @@ export class HuggingFaceProvider implements ImageProvider {
     const result = data as Array<{ url?: string } | number | string>
     const imageUrl = (result[0] as { url?: string })?.url
     if (!imageUrl) {
-      // console.error('[HuggingFace] Invalid result:', result)
-      throw new Error('No image returned from HuggingFace')
+      throw Errors.generationFailed('HuggingFace', 'No image returned')
     }
 
-    // console.log(`[HuggingFace] Success! URL: ${imageUrl.slice(0, 60)}...`)
     return {
       url: imageUrl,
       seed: parseSeedFromResponse(modelId, result, seed),

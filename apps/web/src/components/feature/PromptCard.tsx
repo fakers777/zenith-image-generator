@@ -1,3 +1,5 @@
+import { Globe, Loader2, RotateCcw, Sparkles, Wand2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Accordion,
   AccordionContent,
@@ -11,7 +13,6 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ASPECT_RATIOS, type AspectRatio } from '@/lib/constants'
-import { Loader2, RotateCcw, Sparkles } from 'lucide-react'
 
 interface PromptCardProps {
   prompt: string
@@ -30,6 +31,11 @@ interface PromptCardProps {
   handleRatioSelect: (ratio: AspectRatio) => void
   handleUhdToggle: (enabled: boolean) => void
   handleGenerate: () => void
+  // Prompt optimization/translation
+  onOptimize?: () => void
+  onTranslate?: () => void
+  isOptimizing?: boolean
+  isTranslating?: boolean
 }
 
 export function PromptCard({
@@ -49,30 +55,77 @@ export function PromptCard({
   handleRatioSelect,
   handleUhdToggle,
   handleGenerate,
+  onOptimize,
+  onTranslate,
+  isOptimizing = false,
+  isTranslating = false,
 }: PromptCardProps) {
+  const { t } = useTranslation()
+  const isProcessing = isOptimizing || isTranslating
+
   return (
     <Card className="bg-zinc-900/50 border-zinc-800">
       <CardContent className="p-5 space-y-4">
         <div>
-          <Label className="text-zinc-300 text-sm font-medium">Prompt</Label>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-zinc-300 text-sm font-medium">{t('prompt.title')}</Label>
+            <div className="flex items-center gap-1">
+              {onTranslate && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onTranslate}
+                  disabled={isProcessing || !prompt.trim()}
+                  className="h-7 px-2 text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10"
+                  title={t('prompt.translateToEnglish')}
+                >
+                  {isTranslating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Globe className="w-4 h-4" />
+                  )}
+                  <span className="ml-1 text-xs">{t('prompt.translate')}</span>
+                </Button>
+              )}
+              {onOptimize && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onOptimize}
+                  disabled={isProcessing || !prompt.trim()}
+                  className="h-7 px-2 text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10"
+                  title={t('prompt.optimizePrompt')}
+                >
+                  {isOptimizing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4" />
+                  )}
+                  <span className="ml-1 text-xs">{t('prompt.optimize')}</span>
+                </Button>
+              )}
+            </div>
+          </div>
           <Textarea
             rows={8}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the image you want to create..."
-            className="mt-2 bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 resize-none overflow-y-auto max-h-48"
+            placeholder={t('prompt.placeholder')}
+            className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 resize-none overflow-y-auto max-h-48"
           />
         </div>
 
         <Accordion type="single" collapsible>
           <AccordionItem value="advanced" className="border-zinc-800">
             <AccordionTrigger className="text-zinc-400 text-sm hover:no-underline py-2">
-              Advanced Settings
+              {t('prompt.advancedSettings')}
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 <div>
-                  <Label className="text-zinc-400 text-xs">Negative Prompt</Label>
+                  <Label className="text-zinc-400 text-xs">{t('prompt.negativePrompt')}</Label>
                   <Textarea
                     rows={2}
                     value={negativePrompt}
@@ -86,7 +139,8 @@ export function PromptCard({
                       className="w-3 h-3 cursor-pointer hover:text-orange-400"
                       onClick={() => setSteps(9)}
                     />
-                    Inference Steps: <span className="text-orange-400 font-mono">{steps}</span>
+                    {t('prompt.inferenceStepsLabel')}:{' '}
+                    <span className="text-orange-400 font-mono">{steps}</span>
                   </Label>
                   <Slider
                     value={[steps]}
@@ -104,16 +158,16 @@ export function PromptCard({
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-zinc-300 text-sm font-medium">Aspect Ratio</Label>
+            <Label className="text-zinc-300 text-sm font-medium">{t('prompt.aspectRatio')}</Label>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Label htmlFor="uhd" className="text-zinc-400 text-xs">
-                  UHD / 2K
+                  {t('prompt.uhd2k')}
                 </Label>
                 <Switch
                   id="uhd"
                   checked={uhd}
-                  className={`data-[state=unchecked]:[&>span]:bg-zinc-500 data-[state=checked]:[&>span]:bg-yellow-400 uhd ? "bg-orange-500" : "border-xl border-zinc-800"`}
+                  className="data-[state=unchecked]:[&>span]:bg-zinc-500 data-[state=checked]:[&>span]:bg-yellow-400"
                   onCheckedChange={handleUhdToggle}
                 />
               </div>
@@ -152,7 +206,7 @@ export function PromptCard({
                   if (ratio) setWidth(uhd ? ratio.presets[1].w : ratio.presets[0].w)
                 }}
               />
-              Width: <span className="text-orange-400 font-mono">{width}px</span>
+              {t('prompt.widthLabel')}: <span className="text-orange-400 font-mono">{width}px</span>
             </Label>
             <Slider
               value={[width]}
@@ -172,7 +226,8 @@ export function PromptCard({
                   if (ratio) setHeight(uhd ? ratio.presets[1].h : ratio.presets[0].h)
                 }}
               />
-              Height: <span className="text-orange-400 font-mono">{height}px</span>
+              {t('prompt.heightLabel')}:{' '}
+              <span className="text-orange-400 font-mono">{height}px</span>
             </Label>
             <Slider
               value={[height]}
@@ -193,12 +248,12 @@ export function PromptCard({
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Generating...
+              {t('prompt.generating')}
             </>
           ) : (
             <>
               <Sparkles className="w-5 h-5 mr-2" />
-              Generate Image
+              {t('prompt.generate')}
             </>
           )}
         </Button>

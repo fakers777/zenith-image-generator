@@ -15,7 +15,9 @@
 
 ```json
 {
-  "message": "Z-Image API is running"
+  "status": "ok",
+  "message": "Z-Image API is running",
+  "timestamp": "2025-01-01T00:00:00.000Z"
 }
 ```
 
@@ -121,15 +123,48 @@ X-MS-Token: your-modelscope-token     # ModelScope (可选)
 }
 ```
 
-**响应：**
+**响应（成功）：**
 
 ```json
 {
-  "url": "https://...",
-  "b64_json": "base64-encoded-image-data",
-  "seed": 12345
+  "imageDetails": {
+    "url": "https://example.com/generated-image.png",
+    "provider": "Gitee AI",
+    "model": "Z-Image Turbo",
+    "dimensions": "1024 x 1024 (1:1)",
+    "duration": "5.2s",
+    "seed": 12345,
+    "steps": 9,
+    "prompt": "A beautiful sunset over mountains",
+    "negativePrompt": "low quality, blurry"
+  }
 }
 ```
+
+**响应（错误）：**
+
+```json
+{
+  "error": "Invalid prompt",
+  "code": "INVALID_PROMPT",
+  "details": {
+    "field": "prompt"
+  }
+}
+```
+
+**错误码：**
+
+| 错误码 | HTTP 状态码 | 描述 |
+|--------|-------------|------|
+| `AUTH_REQUIRED` | 401 | 需要 API Token |
+| `AUTH_INVALID` | 401 | 无效的 API Token |
+| `RATE_LIMITED` | 429 | 请求过于频繁 |
+| `QUOTA_EXCEEDED` | 429 | API 配额已用尽 |
+| `INVALID_PROMPT` | 400 | 无效的提示词 |
+| `INVALID_DIMENSIONS` | 400 | 无效的宽度/高度 |
+| `PROVIDER_ERROR` | 502 | 上游服务错误 |
+| `TIMEOUT` | 504 | 请求超时 |
 
 **参数：**
 
@@ -147,19 +182,30 @@ X-MS-Token: your-modelscope-token     # ModelScope (可选)
 
 ## Providers
 
+> 完整的供应商和模型详情，请参阅 **[供应商与模型](./PROVIDERS.md)**。
+
+| Provider | 认证请求头 | 图片格式 | 模型 |
+|----------|------------|----------|------|
+| Gitee AI | `X-API-Key` | PNG | `z-image-turbo` |
+| HuggingFace | `X-HF-Token` | **WebP** | `flux-schnell`, `stable-diffusion-3.5-large` |
+| ModelScope | `X-MS-Token` | PNG | `flux-schnell` |
+
 ### Gitee AI
 - **请求头**: `X-API-Key`
 - **模型**: `z-image-turbo`
+- **图片格式**: PNG
 - **获取 API Key**: [ai.gitee.com](https://ai.gitee.com)
 
 ### HuggingFace
 - **请求头**: `X-HF-Token` (可选，无 token 有速率限制)
 - **模型**: `flux-schnell`, `stable-diffusion-3.5-large`
+- **图片格式**: WebP
 - **获取 Token**: [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ### ModelScope
 - **请求头**: `X-MS-Token`
 - **模型**: `flux-schnell`
+- **图片格式**: PNG
 - **获取 Token**: [modelscope.cn](https://modelscope.cn)
 
 ## `POST /api/generate-hf` (旧版)
@@ -186,6 +232,278 @@ X-HF-Token: your-huggingface-token (可选)
 }
 ```
 
+## `POST /api/video/generate`
+
+创建图片转视频生成任务（仅支持 Gitee AI）。
+
+**请求头：**
+
+```
+Content-Type: application/json
+X-API-Key: your-gitee-ai-api-key
+```
+
+**请求体：**
+
+```json
+{
+  "provider": "gitee",
+  "imageUrl": "https://example.com/image.png",
+  "prompt": "A beautiful sunset over mountains",
+  "width": 1024,
+  "height": 1024
+}
+```
+
+**响应（成功）：**
+
+```json
+{
+  "taskId": "task_abc123",
+  "status": "pending"
+}
+```
+
+**参数：**
+
+| 字段       | 类型   | 必填 | 描述                   |
+| ---------- | ------ | ---- | ---------------------- |
+| `provider` | string | 是   | 必须为 `gitee`         |
+| `imageUrl` | string | 是   | 源图片 URL             |
+| `prompt`   | string | 是   | 视频生成提示词         |
+| `width`    | number | 是   | 视频宽度 (256-2048)    |
+| `height`   | number | 是   | 视频高度 (256-2048)    |
+| `seed`     | number | 否   | 随机种子，用于复现结果 |
+
+## `GET /api/video/status/:taskId`
+
+查询视频生成任务状态。
+
+**请求头：**
+
+```
+X-API-Key: your-gitee-ai-api-key
+```
+
+**路径参数：**
+
+| 参数     | 类型   | 描述       |
+| -------- | ------ | ---------- |
+| `taskId` | string | 视频任务 ID |
+
+**响应（等待中/处理中）：**
+
+```json
+{
+  "status": "processing"
+}
+```
+
+**响应（成功）：**
+
+```json
+{
+  "status": "success",
+  "videoUrl": "https://example.com/generated-video.mp4"
+}
+```
+
+**响应（失败）：**
+
+```json
+{
+  "status": "failed",
+  "error": "Video generation failed"
+}
+```
+
+**状态值：**
+
+| 状态         | 描述               |
+| ------------ | ------------------ |
+| `pending`    | 任务已排队，未开始 |
+| `processing` | 视频生成中         |
+| `success`    | 视频生成成功       |
+| `failed`     | 视频生成失败       |
+
+**注意事项：**
+- 视频生成需要 60-180 秒
+- 建议每 3 秒轮询一次此端点检查状态
+- 视频 URL 是临时的，应及时下载
+
+## `GET /api/llm-providers`
+
+获取所有可用的 LLM Provider（用于提示词优化）。
+
+**响应：**
+
+```json
+{
+  "providers": [
+    {
+      "id": "pollinations",
+      "name": "Pollinations AI",
+      "needsAuth": false,
+      "models": [
+        { "id": "openai", "name": "OpenAI", "description": "快速通用模型" }
+      ]
+    },
+    {
+      "id": "huggingface-llm",
+      "name": "HuggingFace",
+      "needsAuth": false,
+      "authHeader": "X-HF-Token",
+      "models": [
+        { "id": "Qwen/Qwen2.5-72B-Instruct", "name": "Qwen 2.5 72B", "description": "强大的指令跟随模型" }
+      ]
+    },
+    {
+      "id": "gitee-llm",
+      "name": "Gitee AI",
+      "needsAuth": true,
+      "authHeader": "X-API-Key",
+      "models": [
+        { "id": "DeepSeek-V3.2", "name": "DeepSeek V3.2", "description": "最新 DeepSeek 模型" }
+      ]
+    },
+    {
+      "id": "modelscope-llm",
+      "name": "ModelScope",
+      "needsAuth": true,
+      "authHeader": "X-MS-Token",
+      "models": [
+        { "id": "deepseek-ai/DeepSeek-V3.2", "name": "DeepSeek V3.2", "description": "ModelScope 上的最新 DeepSeek 模型" }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek 官方",
+      "needsAuth": true,
+      "authHeader": "X-DeepSeek-Token",
+      "models": [
+        { "id": "deepseek-chat", "name": "DeepSeek Chat", "description": "通用对话模型" }
+      ]
+    }
+  ]
+}
+```
+
+## `POST /api/optimize`
+
+使用 LLM 优化图像提示词，提升生成质量。
+
+**请求头：**
+
+```
+Content-Type: application/json
+X-HF-Token: your-huggingface-token      # huggingface-llm provider (可选)
+X-API-Key: your-gitee-api-key           # gitee-llm provider
+X-MS-Token: your-modelscope-token       # modelscope-llm provider
+X-DeepSeek-Token: your-deepseek-token   # deepseek provider
+```
+
+**请求体：**
+
+```json
+{
+  "prompt": "一只猫",
+  "provider": "pollinations",
+  "lang": "zh",
+  "model": "openai",
+  "systemPrompt": "你是一个专业的 AI 图像提示词工程师..."
+}
+```
+
+**参数：**
+
+| 字段           | 类型   | 必填 | 默认值         | 描述                                             |
+| -------------- | ------ | ---- | -------------- | ------------------------------------------------ |
+| `prompt`       | string | 是   | -              | 需要优化的提示词 (最多 4000 字符)                |
+| `provider`     | string | 否   | `pollinations` | LLM 提供商: `pollinations`, `huggingface-llm`, `gitee-llm`, `modelscope-llm`, `deepseek` |
+| `lang`         | string | 否   | `en`           | 输出语言: `en` (英文) 或 `zh` (中文)             |
+| `model`        | string | 否   | 提供商默认     | 使用的模型 ID                                    |
+| `systemPrompt` | string | 否   | 内置           | 自定义系统提示词                                 |
+
+**响应（成功）：**
+
+```json
+{
+  "optimized": "一只毛茸茸的橘色虎斑猫，拥有翠绿色的眼睛，优雅地坐在古旧木质窗台上，温暖的黄金时刻阳光穿过复古蕾丝窗帘，背景呈现柔和的虚化效果，超写实风格，8K 分辨率，浅景深",
+  "provider": "pollinations",
+  "model": "openai"
+}
+```
+
+**响应（错误）：**
+
+```json
+{
+  "error": "API token is required for Gitee AI",
+  "code": "AUTH_REQUIRED",
+  "details": {
+    "provider": "gitee-llm"
+  }
+}
+```
+
+**LLM 提供商：**
+
+| Provider | 认证请求头 | 默认模型 | 免费 |
+|----------|------------|----------|------|
+| Pollinations | 无 | `openai` | 是 |
+| HuggingFace | `X-HF-Token` (可选) | `Qwen/Qwen2.5-72B-Instruct` | 是 (无 Token 有速率限制) |
+| Gitee AI | `X-API-Key` | `DeepSeek-V3.2` | 否 (复用现有 Gitee Token) |
+| ModelScope | `X-MS-Token` | `deepseek-ai/DeepSeek-V3.2` | 否 (复用现有 ModelScope Token) |
+| DeepSeek 官方 | `X-DeepSeek-Token` | `deepseek-chat` | 否 |
+
+## `POST /api/translate`
+
+将中文提示词翻译成英文，以获得更好的图像生成效果。
+
+**请求头：**
+
+```
+Content-Type: application/json
+```
+
+**请求体：**
+
+```json
+{
+  "prompt": "一只在雪地里奔跑的金毛犬"
+}
+```
+
+**参数：**
+
+| 字段     | 类型   | 必填 | 描述                           |
+| -------- | ------ | ---- | ------------------------------ |
+| `prompt` | string | 是   | 需要翻译的提示词 (最多 2000 字符) |
+
+**响应（成功）：**
+
+```json
+{
+  "translated": "A golden retriever running in the snow",
+  "model": "openai-fast"
+}
+```
+
+**响应（错误）：**
+
+```json
+{
+  "error": "Prompt is required",
+  "code": "INVALID_PROMPT"
+}
+```
+
+**说明：**
+- 使用 Pollinations AI 的 `openai-fast` 模型
+- 免费使用，无需认证
+- 如果输入已经是英文，将原样返回
+- 专门针对 AI 图像生成提示词进行优化
+
 ## 使用示例
 
 ### cURL
@@ -211,11 +529,58 @@ curl -X POST https://your-project.pages.dev/api/generate \
     "model": "flux-schnell",
     "prompt": "一只可爱的猫"
   }'
+
+# 提示词优化 (免费 - Pollinations)
+curl -X POST https://your-project.pages.dev/api/optimize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "一只猫",
+    "provider": "pollinations",
+    "lang": "zh"
+  }'
+
+# 提示词优化 (HuggingFace - 免费，可选 Token)
+curl -X POST https://your-project.pages.dev/api/optimize \
+  -H "Content-Type: application/json" \
+  -H "X-HF-Token: your-hf-token" \
+  -d '{
+    "prompt": "一只猫",
+    "provider": "huggingface-llm",
+    "lang": "zh"
+  }'
+
+# 提示词优化 (Gitee AI)
+curl -X POST https://your-project.pages.dev/api/optimize \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-gitee-api-key" \
+  -d '{
+    "prompt": "一只猫",
+    "provider": "gitee-llm",
+    "lang": "zh"
+  }'
+
+# 提示词优化 (ModelScope)
+curl -X POST https://your-project.pages.dev/api/optimize \
+  -H "Content-Type: application/json" \
+  -H "X-MS-Token: your-modelscope-token" \
+  -d '{
+    "prompt": "一只猫",
+    "provider": "modelscope-llm",
+    "lang": "zh"
+  }'
+
+# 提示词翻译 (中文转英文 - 免费)
+curl -X POST https://your-project.pages.dev/api/translate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "一只在雪地里奔跑的金毛犬"
+  }'
 ```
 
 ### JavaScript (fetch)
 
 ```javascript
+// 图像生成
 const response = await fetch('https://your-project.pages.dev/api/generate', {
   method: 'POST',
   headers: {
@@ -231,7 +596,56 @@ const response = await fetch('https://your-project.pages.dev/api/generate', {
 });
 
 const data = await response.json();
-console.log(data.url || `data:image/png;base64,${data.b64_json}`);
+console.log(data.imageDetails.url);
+
+// 提示词优化 (免费)
+const optimizeResponse = await fetch('https://your-project.pages.dev/api/optimize', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: '一只坐在窗台上的猫',
+    provider: 'pollinations',
+    lang: 'zh',
+  }),
+});
+
+const optimized = await optimizeResponse.json();
+console.log(optimized.optimized);
+// 输出: "一只毛茸茸的橘色虎斑猫，拥有翠绿色的眼睛，优雅地坐在古旧木质窗台上..."
+
+// 使用 Gitee AI 优化提示词
+const giteeOptimize = await fetch('https://your-project.pages.dev/api/optimize', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'your-gitee-api-key',
+  },
+  body: JSON.stringify({
+    prompt: '一只猫',
+    provider: 'gitee-llm',
+    lang: 'zh',
+  }),
+});
+
+const giteeResult = await giteeOptimize.json();
+console.log(giteeResult.optimized);
+
+// 提示词翻译 (中文转英文 - 免费)
+const translateResponse = await fetch('https://your-project.pages.dev/api/translate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    prompt: '一只在雪地里奔跑的金毛犬',
+  }),
+});
+
+const translated = await translateResponse.json();
+console.log(translated.translated);
+// 输出: "A golden retriever running in the snow"
 ```
 
 ### Python
@@ -239,6 +653,7 @@ console.log(data.url || `data:image/png;base64,${data.b64_json}`);
 ```python
 import requests
 
+# 图像生成
 response = requests.post(
     'https://your-project.pages.dev/api/generate',
     headers={
@@ -254,7 +669,53 @@ response = requests.post(
 )
 
 data = response.json()
-print(data.get('url') or data.get('b64_json'))
+print(data['imageDetails']['url'])
+
+# 提示词优化 (免费 - Pollinations)
+optimize_response = requests.post(
+    'https://your-project.pages.dev/api/optimize',
+    headers={
+        'Content-Type': 'application/json',
+    },
+    json={
+        'prompt': '一只猫',
+        'provider': 'pollinations',
+        'lang': 'zh',
+    }
+)
+
+result = optimize_response.json()
+print(result['optimized'])
+
+# 使用 Gitee AI 优化提示词
+gitee_optimize = requests.post(
+    'https://your-project.pages.dev/api/optimize',
+    headers={
+        'Content-Type': 'application/json',
+        'X-API-Key': 'your-gitee-api-key',
+    },
+    json={
+        'prompt': '一只猫',
+        'provider': 'gitee-llm',
+        'lang': 'zh',
+    }
+)
+
+print(gitee_optimize.json()['optimized'])
+
+# 提示词翻译 (中文转英文 - 免费)
+translate_response = requests.post(
+    'https://your-project.pages.dev/api/translate',
+    headers={
+        'Content-Type': 'application/json',
+    },
+    json={
+        'prompt': '一只在雪地里奔跑的金毛犬',
+    }
+)
+
+print(translate_response.json()['translated'])
+# 输出: "A golden retriever running in the snow"
 ```
 
 ## 支持的宽高比
